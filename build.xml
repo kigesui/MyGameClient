@@ -5,6 +5,7 @@
     <property name="tst.dir" value="tst"/>
     <property name="lib.dir" value="lib"/>
     <property name="config.dir" value="configuration"/>
+    <property name="data.dir" value="data"/>
 
     <property name="build.dir" value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
@@ -35,6 +36,10 @@
         <copy todir="${classes.dir}">
             <fileset dir="${config.dir}" excludes="**/*.java"/>
         </copy>
+        <copy todir="${jar.dir}">
+            <fileset dir="${data.dir}" excludes="**/*.java"/>
+        </copy>
+
     </target>
 
     <target name="jar" depends="compile">
@@ -78,6 +83,7 @@
         <java fork="true" classname="${main-class}">
             <classpath refid="libs.path"/>
             <classpath refid="app.path"/>
+            <classpath location="${data.dir}"/>
         </java>
     </target>
 

@@ -1,14 +1,22 @@
 package com.kigesui.view;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.log4j.Logger;
 
+import com.jogamp.opengl.DebugGL2;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.glu.GLUquadric;
 import com.jogamp.opengl.util.FPSAnimator;
+import com.jogamp.opengl.util.texture.Texture;
+import com.jogamp.opengl.util.texture.TextureData;
+import com.jogamp.opengl.util.texture.TextureIO;
 
 public class MyJoglCanvas extends GLCanvas implements GLEventListener {
 
@@ -24,6 +32,9 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
     /** The OpenGL animator. */
     private FPSAnimator animator;
 
+    /** The earth texture. */
+    private Texture earthTexture;
+
     public MyJoglCanvas(GLCapabilities capabilities, int width, int height) {
         super(capabilities);
         setSize(width, height);
@@ -32,7 +43,7 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
 
     @Override
     public void init(GLAutoDrawable drawable) {
-//        drawable.setGL(new DebugGL(drawable.getGL()));
+        drawable.setGL(new DebugGL2(drawable.getGL().getGL2()));
         final GL2 gl = drawable.getGL().getGL2();
 
         // Enable z- (depth) buffer for hidden surface removal. 
@@ -51,9 +62,22 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
         // Create GLU.
         glu = new GLU();
 
+        // Load earth texture.
+        try {
+            InputStream stream = getClass().getResourceAsStream("earth.jpg");
+            TextureData data = TextureIO.newTextureData(null,stream, false, "jpg");
+            earthTexture = TextureIO.newTexture(data);
+        }
+        catch (IOException e) {
+            logger.error("can't find picture");
+            e.printStackTrace();
+            System.exit(1);
+        }
+
         // Start animator.
         animator = new FPSAnimator(this, fps);
         animator.start();
+
     }
 
     @Override
@@ -76,16 +100,66 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
         // Clear screen.
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 
-        // Set camera.
-        setCamera(gl, glu, 100);
+        // Prepare light parameters.
+        float SHINE_ALL_DIRECTIONS = 1;
+        float[] lightPos = {-30, 0, 0, SHINE_ALL_DIRECTIONS};
+        float[] lightColorAmbient = {0.2f, 0.2f, 0.2f, 1f};
+        float[] lightColorSpecular = {0.8f, 0.8f, 0.8f, 1f};
 
-        // Write triangle.
-        gl.glColor3f(0.9f, 0.5f, 0.2f);
-        gl.glBegin(GL2.GL_TRIANGLE_FAN);
-        gl.glVertex3f(-20, -20, 0);
-        gl.glVertex3f(+20, -20, 0);
-        gl.glVertex3f(0, 20, 0);
-        gl.glEnd();
+        // Set light parameters.
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPos, 0);
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, lightColorAmbient, 0);
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightColorSpecular, 0);
+
+        // Enable lighting in GL.
+        gl.glEnable(GL2.GL_LIGHT1);
+        gl.glEnable(GL2.GL_LIGHTING);
+//
+//        // Set material properties.
+//        float[] rgba = {0.3f, 0.5f, 1f};
+//        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, rgba, 0);
+//        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, rgba, 0);
+//        gl.glMaterialf(GL2.GL_FRONT, GL2.GL_SHININESS, 0.5f);
+//
+//        // Set camera.
+//        setCamera(gl, glu, 100);
+//
+//        // Write triangle.
+//        gl.glColor3f(0.9f, 0.5f, 0.2f);
+//        gl.glBegin(GL2.GL_TRIANGLE_FAN);
+//        gl.glVertex3f(-20, -20, 0);
+//        gl.glVertex3f(+20, -20, 0);
+//        gl.glVertex3f(0, 20, 0);
+//        gl.glEnd();
+//        
+//        // Set camera.
+//        setCamera(gl, glu, 30);
+//
+//        // Draw sphere (possible styles: FILL, LINE, POINT).
+//        gl.glColor3f(0.3f, 0.5f, 1f);
+//        GLUquadric earth = glu.gluNewQuadric();
+//        glu.gluQuadricDrawStyle(earth, GLU.GLU_FILL);
+//        glu.gluQuadricNormals(earth, GLU.GLU_FLAT);
+//        glu.gluQuadricOrientation(earth, GLU.GLU_OUTSIDE);
+//        final float radius = 6.378f;
+//        final int slices = 16;
+//        final int stacks = 16;
+//        glu.gluSphere(earth, radius, slices, stacks);
+//        glu.gluDeleteQuadric(earth);
+
+        // Set material properties.
+        float[] rgba = {1f, 1f, 1f};
+        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, rgba, 0);
+        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, rgba, 0);
+        gl.glMaterialf(GL2.GL_FRONT, GL2.GL_SHININESS, 0.5f);
+
+        // Apply texture.
+        earthTexture.enable(gl);
+        earthTexture.bind(gl);
+
+        // Draw sphere.
+        GLUquadric earth = glu.gluNewQuadric();
+        glu.gluQuadricTexture(earth, true);
     }
 
     public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {
