@@ -64,7 +64,7 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
 
         // Load earth texture.
         try {
-            InputStream stream = getClass().getResourceAsStream("earth.jpg");
+            InputStream stream = ClassLoader.getSystemClassLoader().getResourceAsStream("data/earth.jpg");
             TextureData data = TextureIO.newTextureData(null,stream, false, "jpg");
             earthTexture = TextureIO.newTexture(data);
         }
@@ -92,7 +92,7 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
 
     @Override
     public void display(GLAutoDrawable drawable) {
-        if (!animator.isAnimating()) {
+        if (animator == null || !animator.isAnimating()) {
             return;
         }
         final GL2 gl = drawable.getGL().getGL2();
@@ -100,20 +100,20 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
         // Clear screen.
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 
-        // Prepare light parameters.
-        float SHINE_ALL_DIRECTIONS = 1;
-        float[] lightPos = {-30, 0, 0, SHINE_ALL_DIRECTIONS};
-        float[] lightColorAmbient = {0.2f, 0.2f, 0.2f, 1f};
-        float[] lightColorSpecular = {0.8f, 0.8f, 0.8f, 1f};
-
-        // Set light parameters.
-        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPos, 0);
-        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, lightColorAmbient, 0);
-        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightColorSpecular, 0);
-
-        // Enable lighting in GL.
-        gl.glEnable(GL2.GL_LIGHT1);
-        gl.glEnable(GL2.GL_LIGHTING);
+//        // Prepare light parameters.
+//        float SHINE_ALL_DIRECTIONS = 1;
+//        float[] lightPos = {-30, 0, 0, SHINE_ALL_DIRECTIONS};
+//        float[] lightColorAmbient = {0.2f, 0.2f, 0.2f, 1f};
+//        float[] lightColorSpecular = {0.8f, 0.8f, 0.8f, 1f};
+//
+//        // Set light parameters.
+//        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPos, 0);
+//        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, lightColorAmbient, 0);
+//        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightColorSpecular, 0);
+//
+//        // Enable lighting in GL.
+//        gl.glEnable(GL2.GL_LIGHT1);
+//        gl.glEnable(GL2.GL_LIGHTING);
 //
 //        // Set material properties.
 //        float[] rgba = {0.3f, 0.5f, 1f};
@@ -147,6 +147,24 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
 //        glu.gluSphere(earth, radius, slices, stacks);
 //        glu.gluDeleteQuadric(earth);
 
+        // Set camera.
+        setCamera(gl, glu, 30);
+
+        // Prepare light parameters.
+        float SHINE_ALL_DIRECTIONS = 1;
+        float[] lightPos = {-30, 0, 0, SHINE_ALL_DIRECTIONS};
+        float[] lightColorAmbient = {0.2f, 0.2f, 0.2f, 1f};
+        float[] lightColorSpecular = {0.8f, 0.8f, 0.8f, 1f};
+
+        // Set light parameters.
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPos, 0);
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, lightColorAmbient, 0);
+        gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightColorSpecular, 0);
+
+        // Enable lighting in GL.
+        gl.glEnable(GL2.GL_LIGHT1);
+        gl.glEnable(GL2.GL_LIGHTING);
+
         // Set material properties.
         float[] rgba = {1f, 1f, 1f};
         gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, rgba, 0);
@@ -157,9 +175,18 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
         earthTexture.enable(gl);
         earthTexture.bind(gl);
 
-        // Draw sphere.
+        // Draw sphere (possible styles: FILL, LINE, POINT).
         GLUquadric earth = glu.gluNewQuadric();
         glu.gluQuadricTexture(earth, true);
+        glu.gluQuadricDrawStyle(earth, GLU.GLU_FILL);
+        glu.gluQuadricNormals(earth, GLU.GLU_FLAT);
+        glu.gluQuadricOrientation(earth, GLU.GLU_OUTSIDE);
+        final float radius = 6.378f;
+        final int slices = 16;
+        final int stacks = 16;
+        glu.gluSphere(earth, radius, slices, stacks);
+        glu.gluDeleteQuadric(earth);
+
     }
 
     public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {
