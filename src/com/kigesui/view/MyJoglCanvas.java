@@ -65,8 +65,9 @@ public class MyJoglCanvas extends GLCanvas implements GLEventListener {
         // Load earth texture.
         try {
             InputStream stream = ClassLoader.getSystemClassLoader().getResourceAsStream("data/earth.jpg");
-            TextureData data = TextureIO.newTextureData(null,stream, false, "jpg");
-            earthTexture = TextureIO.newTexture(data);
+//            TextureData data = TextureIO.newTextureData(null,stream, false, "jpg");
+//            earthTexture = TextureIO.newTexture(data);
+            earthTexture = TextureIO.newTexture(stream, false, "jpg");
         }
         catch (IOException e) {
             logger.error("can't find picture");

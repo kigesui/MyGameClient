@@ -87,6 +87,6 @@
 
     <target name="clean-build" depends="clean,jar"/>
 
-    <target name="main" depends="clean,junit,junitreport,run"/>
+    <target name="main" depends="clean,junit,run"/>
 
 </project>
